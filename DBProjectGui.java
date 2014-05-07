@@ -28,21 +28,25 @@ public class DBProjectGui extends javax.swing.JFrame {
 
         dropDownBox = new javax.swing.JComboBox();
         SelectQueryLabel = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        resultsArea = new javax.swing.JTextArea();
+        resultsArea = new javax.swing.JScrollPane();
+        //resultsArea = new javax.swing.JTextArea();
         executeButton = new javax.swing.JButton();
         QueryResultsLabel = new javax.swing.JLabel();
         TotleLabel = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        dropDownBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Get Customers", "Item 2", "Item 3", "Item 4" }));
+        /////////////
+        //Add/Change menu items here
+        /////////////
+        
+        dropDownBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { " ","Get List of Payments", "Get Agents and Tickets", "Get Tickets and Objects", "Get a Customer's Total Payment", "New Ticket", "Get Contact Info" }));
 
         SelectQueryLabel.setText("Select Query:");
 
-        resultsArea.setColumns(20);
-        resultsArea.setRows(5);
-        jScrollPane1.setViewportView(resultsArea);
+        //resultsArea.setColumns(20);
+        //resultsArea.setRows(5);
+        //jScrollPane1.setViewportView(resultsArea);
 
         executeButton.setText("Execute Query");
         executeButton.addActionListener(new java.awt.event.ActionListener() {
@@ -65,7 +69,7 @@ public class DBProjectGui extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(resultsArea, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(dropDownBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(QueryResultsLabel)
@@ -90,7 +94,7 @@ public class DBProjectGui extends javax.swing.JFrame {
                     .addComponent(executeButton)
                     .addComponent(QueryResultsLabel))
                 .addGap(4, 4, 4)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
+                .addComponent(resultsArea, javax.swing.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -104,13 +108,43 @@ public class DBProjectGui extends javax.swing.JFrame {
     	//call their respective methods in the dbConnection Object
     	switch ((String)dropDownBox.getSelectedItem()){
     	
-    	case "Get Customers":
+    	case "Get List of Payments":
     		
-    		resultsArea.setText(dbConnection.getCustomers());
+    		resultsArea.setViewportView(dbConnection.getListOfPayments());
     		
     		break;
+    		
+		case "Get Agents and Tickets":
+		    		
+			resultsArea.setViewportView(dbConnection.getAgentsTickets());
+		    		
+    		break;
+		    		
+		case "Get Tickets and Objects":
+						
+			resultsArea.setViewportView(dbConnection.getTicketsandObjects());
+			
+			break;
+			
+		case "Get a Customer's Total Payment":
+			
+			resultsArea.setViewportView(dbConnection.getSumCustomerPayments());
+			
+			break;
+			
+		case "New Ticket":
+			
+			resultsArea.setViewportView(dbConnection.addTicket());
+			
+			break;
     	
     	
+		case "Get Contact Info":
+			
+			resultsArea.setViewportView(dbConnection.getContactInfo());
+			
+			break;
+			
     	}
     	
     	
@@ -158,8 +192,8 @@ public class DBProjectGui extends javax.swing.JFrame {
     private javax.swing.JLabel TotleLabel;
     private javax.swing.JComboBox dropDownBox;
     private javax.swing.JButton executeButton;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextArea resultsArea;
+    private javax.swing.JScrollPane resultsArea;
+   // private javax.swing.JTextArea resultsArea;
     
     
     private DBProjectConnection dbConnection;
