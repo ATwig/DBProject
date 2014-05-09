@@ -40,7 +40,7 @@ public class DBProjectGui extends javax.swing.JFrame {
         //Add/Change menu items here
         /////////////
         
-        dropDownBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { " ","Get List of Payments", "Get Agents and Tickets", "Get Tickets and Objects", "Get a Customer's Total Payment", "New Ticket", "Get Contact Info" }));
+        dropDownBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { " ","Get List of Payments", "Get Agents and Tickets", "Get Tickets and Objects", "Get a Customer's Total Payment", "New Ticket", "Get Contact Info", "Get Customer Items", "Most Tickets by Agent", "Customers Who Have Tickets", "Select Resolved Tickets" }));
 
         SelectQueryLabel.setText("Select Query:");
 
@@ -145,7 +145,33 @@ public class DBProjectGui extends javax.swing.JFrame {
 			
 			break;
 			
-    	}
+		case "Get Customer Items":
+			
+			resultsArea.setViewportView(dbConnection.getCustomersItems());
+			
+			break;
+			
+    	
+    	case "Most Tickets by Agent":
+		
+			resultsArea.setViewportView(dbConnection.mostTicketsByAgent());
+			
+			break;
+			
+    	case "Customers Who Have Tickets":
+    		
+			resultsArea.setViewportView(dbConnection.customerHasTickets());
+
+    		
+    		break;
+    		
+    	case "Select Resolved Tickets":
+    		
+			resultsArea.setViewportView(dbConnection.allResolvedTickets());
+    		
+    		break;
+		
+		}//end switch
     	
     	
     	

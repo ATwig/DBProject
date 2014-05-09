@@ -16,6 +16,8 @@ import java.sql.Types;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.postgresql.*;
+
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -28,7 +30,7 @@ public class DBProjectConnection {
 	
 private ResultSet executeQuery(String query){
 		
-		Connection con = null;
+		PGConnection con = null;
         Statement st = null;
         ResultSet rs = null;
 
@@ -41,13 +43,15 @@ private ResultSet executeQuery(String query){
         //Execute the selected query
         try {
             
-        	con = DriverManager.getConnection(url, user, password);
+        	con = (PGConnection) DriverManager.getConnection(url, user, password);
             
-        	st = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        	st = ((Connection) con).createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             
         	//con.setAutoCommit(false);
         	
         	rs = st.executeQuery(query);
+        	
+        	((PGConnection)con).getNotifications();
             
             //con.commit();
             
@@ -70,7 +74,7 @@ private ResultSet executeQuery(String query){
                //    st.close();
                //}
                 if (con != null) {
-                    con.close();
+                    ((Connection) con).close();
                 }
 
             } 
@@ -90,7 +94,7 @@ private ResultSet executeQuery(String query){
 
 	private int executeInsert(String query){
 		
-		Connection con = null;
+		PGConnection con = null;
         Statement st = null;
         int rs = -1;
 
@@ -103,15 +107,17 @@ private ResultSet executeQuery(String query){
         //Execute the selected query
         try {
             
-        	con = DriverManager.getConnection(url, user, password);
+        	con = (PGConnection) DriverManager.getConnection(url, user, password);
             
-        	st = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        	st = ((Connection) con).createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             
-        	con.setAutoCommit(false);
+        	((Connection) con).setAutoCommit(false);
         	
         	rs = st.executeUpdate(query);
             
-            con.commit();
+            ((Connection) con).commit();
+            
+            ((PGConnection)con).getNotifications();
             
             return rs;
 
@@ -125,7 +131,7 @@ private ResultSet executeQuery(String query){
             if(con != null){
             	
             	try{
-            		con.rollback();
+            		((Connection) con).rollback();
             	}
             	catch(SQLException ex2){
             		
@@ -147,7 +153,7 @@ private ResultSet executeQuery(String query){
                //    st.close();
                //}
                 if (con != null) {
-                    con.close();
+                    ((Connection) con).close();
                 }
 
             } 
@@ -165,57 +171,78 @@ private ResultSet executeQuery(String query){
 	
 	}
 	
-private String executeFunction(String query, String arg){
+private String executeFunction(String query){
 		
-	Connection con = null;
-       
-    
+	PGConnection con = null;
+    Statement st = null;
+    ResultSet rs = null;
+
+
     String url = "jdbc:postgresql://localhost/databaseProject";
     String user = "DBProject";
     String password = "password";
     
     
-    CallableStatement cstmt;
-	try {
-		
-		con = DriverManager.getConnection(url, user, password);
-		
-		cstmt = con.prepareCall(query);
-	
-        cstmt.registerOutParameter(1, Types.NULL);
+    //Execute the selected query
+    try {
         
-        if(query.contains("getContactInfo"))
-        	cstmt.setObject("a", arg);
-        else
-        	cstmt.setInt(2, Integer.parseInt(arg));
+    	con = (PGConnection) DriverManager.getConnection(url, user, password);
         
-        cstmt.executeUpdate();
+    	st = ((Connection) con).createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        
+    	//con.setAutoCommit(false);
+    	
+    	rs = st.executeQuery(query);
+        
+        //con.commit();
+        
+    	System.out.println(((Connection)con).getWarnings().getMessage());
+    	
+        PGNotification[] notification = ((PGConnection)con).getNotifications();
+        
+        String notificationString = "";
+        
+        for(int i = 0; i < notification.length; i++){
+        	
+        	notificationString += " "+notification[i].getParameter()+" \n";
+        	
+        }
+        
+        return notificationString;
 
-        String returnString = "";
-        SQLWarning tempWarning;
-        
-        do{
-        	tempWarning = cstmt.getWarnings();
-        	
-        	if(tempWarning != null)        		
-        		if(tempWarning.getMessage() != null)
-        			returnString+=tempWarning.getMessage()+" ";
-        		
-        	
-        	
-        }while (tempWarning != null);
-        
-        return returnString;
-        
+    } 
     
-	} catch (SQLException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-
-	return null;
+    catch (SQLException ex) {
+        Logger lgr = Logger.getLogger(DBProject2.class.getName());
+        lgr.log(Level.SEVERE, ex.getMessage(), ex);         
         
-	
+        
+    } 
+    finally {
+        try {
+           // if (rs != null) {
+           //    rs.close();
+           // }
+           //if (st != null) {
+           //    st.close();
+           //}
+            if (con != null) {
+                ((Connection) con).close();
+            }
+
+        } 
+        
+        catch (SQLException ex) {
+        
+        	Logger lgr = Logger.getLogger(DBProject2.class.getName());
+            lgr.log(Level.WARNING, ex.getMessage(), ex);
+        
+        }
+        
+    }
+    
+    return null;
+
 }
 	
 	
@@ -427,62 +454,66 @@ public javax.swing.JTable createInsertTable(int results){
 	
 	public JTable getContactInfo(){
 		
-		String[] inputNames = {"Customer Name:"};
+		String[] inputNames = {"Name "};
 		
 		String[] inputResults = inputPopup(inputNames);
+	
+		if (inputResults == null)
+			return null;
 		
-		String query = "select part3schema.getContactInfo ('"+inputResults[0]+"');";
-		
-		/*
-		String testString = executeFunction(query, inputResults[0]);
-		*/
-		
+		String query = "select part3schema.getContactInfo('"+inputResults[0].toLowerCase()+"');";
+
 		ResultSet results = executeQuery(query);
 		
-		String returnString = "";
-		
-		String tempString = null;
-		
-		try{
-			
-			//if(results != null){
-			
-				SQLWarning tempWarning;
-				
-				do{
-		        	tempWarning = results.getWarnings();
-		        	
-		        	
-		        	
-		        	if(tempWarning != null){   
-		        		
-		        		tempString = tempWarning.getMessage();
-		        		
-		        		if(tempString != null){
-		        			returnString+=tempString+" ";
-		        			System.out.println(tempString);
-		        		}
-		        	}
-		        	else
-		        		System.out.println("NULL WARNING");
-		        	
-		        	
-		        }while (tempWarning != null);
-		        				
-				
-			//}
-		}
-		catch(SQLException e){
-		
-		}
-		String[] colNames = {"Result"};
-		
-		String[][] data = new String[1][1];
+		return createTable(results);		
 		
 		
-		data[0][0] = returnString;
+	}
+	
+	public JTable getCustomersItems(){
+		
+		String[] inputNames = {"Customer ID "};
+		
+		String[] inputResults = inputPopup(inputNames);
+	
+		if (inputResults == null)
+			return null;
+		
+		String query = "select part3schema.customersItems('"+inputResults[0]+"');";
 
-		return new javax.swing.JTable(data, colNames);
+		ResultSet results = executeQuery(query);
+		
+		return createTable(results);
+		
+	}
+	
+	public JTable mostTicketsByAgent(){
+			
+		String query = "select part3schema.mostTicketsByAgent();";
+
+		ResultSet results = executeQuery(query);
+		
+		return createTable(results);
+		
+	}
+	
+	public JTable customerHasTickets(){
+		
+		String query = "select part3schema.clientHasTickets();";
+
+		ResultSet results = executeQuery(query);
+		
+		return createTable(results);
+		
+	}
+	
+	public JTable allResolvedTickets(){
+		
+		String query = "select part3schema.allAgentsInsured();";
+
+		ResultSet results = executeQuery(query);
+		
+		return createTable(results);
 		
 	}
 	
